@@ -424,6 +424,7 @@
     <Compile Include="Neural\Networks\Training\Propagation\Resilient\ResilientPropagation.cs" />
     <Compile Include="Neural\Networks\Training\Propagation\SCG\ScaledConjugateGradient.cs" />
     <Compile Include="Neural\Networks\Training\Propagation\TrainingContinuation.cs" />
+    <Compile Include="Neural\Networks\Training\PSO\ParticleSwarmOptimizationAlgorithm.cs" />
     <Compile Include="Neural\Networks\Training\Simple\TrainAdaline.cs" />
     <Compile Include="Neural\Networks\Training\Strategy\SmartLearningRate.cs" />
     <Compile Include="Neural\Networks\Training\Strategy\SmartMomentum.cs" />

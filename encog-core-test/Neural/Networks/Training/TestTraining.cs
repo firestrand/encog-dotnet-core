@@ -24,6 +24,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using Encog.Neural.Networks.Training.PSO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Encog.ML.Data;
 using Encog.ML.Data.Basic;
@@ -114,6 +115,16 @@ namespace Encog.Neural.Networks.Training
             ICalculateScore score = new TrainingSetScore(trainingData);
             NeuralGeneticAlgorithm genetic = new NeuralGeneticAlgorithm(network, new RangeRandomizer(-1, 1), score, 500, 0.1, 0.25);
             NetworkUtil.TestTraining(genetic, 0.00001);
+        }
+
+        [TestMethod]
+        public void TestParticleSwarmOptimization()
+        {
+            IMLDataSet trainingData = new BasicMLDataSet(XOR.XORInput, XOR.XORIdeal);
+            BasicNetwork network = NetworkUtil.CreateXORNetworkUntrained();
+            ICalculateScore score = new TrainingSetScore(trainingData);
+            ParticleSwarmOptimizationAlgorithm pso = new ParticleSwarmOptimizationAlgorithm(network, new RangeRandomizer(-1,1),score);
+            NetworkUtil.TestTraining(pso, 0.00001);
         }
 
         [TestMethod]
