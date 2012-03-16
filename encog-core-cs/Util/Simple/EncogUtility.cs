@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,9 +39,6 @@ using Encog.Neural.Networks.Training.Propagation.Resilient;
 using Encog.Neural.Pattern;
 using Encog.Util.CSV;
 using Encog.App.Analyst.CSV.Basic;
-#if !SILVERLIGHT
-
-#endif
 
 namespace Encog.Util.Simple
 {
@@ -123,6 +120,8 @@ namespace Encog.Util.Simple
                 buffer.Add(inputData, idealData);
             }
             buffer.EndLoad();
+            buffer.Close();
+            csv.Close();          
         }
 
         /// <summary>
@@ -168,7 +167,7 @@ namespace Encog.Util.Simple
         /// </summary>
         /// <param name="data">The neural data to format.</param>
         /// <returns>The formatted neural data.</returns>
-        private static String FormatNeuralData(IMLData data)
+        public static String FormatNeuralData(IMLData data)
         {
             var result = new StringBuilder();
             for (int i = 0; i < data.Count; i++)
@@ -237,6 +236,21 @@ namespace Encog.Util.Simple
 
 
         /// <summary>
+        /// Train the neural network, using SCG training, and output status to the
+        /// console.
+        /// </summary>
+        /// <param name="network">The network to train.</param>
+        /// <param name="trainingSet">The training set.</param>
+        /// <param name="seconds">The seconds.</param>
+        public static void TrainConsole(BasicNetwork network,
+                                        IMLDataSet trainingSet, double seconds)
+        {
+            Propagation train = new ResilientPropagation(network,
+                                                         trainingSet) { ThreadCount = 0 };
+            TrainConsole(train, network, trainingSet, seconds);
+        }
+
+        /// <summary>
         /// Train the network, using the specified training algorithm, and send the
         /// output to the console.
         /// </summary>
@@ -271,7 +285,40 @@ namespace Encog.Util.Simple
             train.FinishTraining();
         }
 
-#if !SILVERLIGHT
+
+        /// <summary>
+        /// Train the network, using the specified training algorithm, and send the
+        /// output to the console.
+        /// </summary>
+        /// <param name="train">The training method to use.</param>
+        /// <param name="network">The network to train.</param>
+        /// <param name="trainingSet">The training set.</param>
+        /// <param name="seconds">The second to train for.</param>
+        public static void TrainConsole(IMLTrain train,BasicNetwork network, IMLDataSet trainingSet,double seconds)
+        {
+            int epoch = 1;
+            double remaining;
+
+            Console.WriteLine(@"Beginning training...");
+            long start = Environment.TickCount;
+            do
+            {
+                train.Iteration();
+
+                double current = Environment.TickCount;
+                double elapsed = (current - start) / 1000;
+                remaining = seconds - elapsed;
+
+                Console.WriteLine(@"Iteration #" + Format.FormatInteger(epoch)
+                                  + @" Error:" + Format.FormatPercent(train.Error)
+                                  + @" elapsed time = " + Format.FormatTimeSpan((int)elapsed)
+                                  + @" time left = "
+                                  + Format.FormatTimeSpan((int)remaining));
+                epoch++;
+            } while (remaining > 0 && !train.TrainingDone);
+            train.FinishTraining();
+        }
+
         /// <summary>
         /// Train using RPROP and display progress to a dialog box.
         /// </summary>
@@ -284,9 +331,7 @@ namespace Encog.Util.Simple
                                                          trainingSet) {ThreadCount = 0};
             TrainDialog(train, network, trainingSet);
         }
-#endif
 
-#if !SILVERLIGHT
         /// <summary>
         /// Train, using the specified training method, display progress to a dialog
         /// box.
@@ -300,7 +345,6 @@ namespace Encog.Util.Simple
             var dialog = new TrainingDialog {Train = train};
             dialog.ShowDialog();
         }
-#endif
 
         /// <summary>
         /// Train the network, to a specific error, send the output to the console.
@@ -438,7 +482,9 @@ namespace Encog.Util.Simple
         public static IMLDataSet LoadEGB2Memory(FileInfo filename)
         {
             var buffer = new BufferedMLDataSet(filename.ToString());
-            return buffer.LoadToMemory();
+            var result = buffer.LoadToMemory();
+            buffer.Close();
+            return result;
         }
 
         /// <summary>

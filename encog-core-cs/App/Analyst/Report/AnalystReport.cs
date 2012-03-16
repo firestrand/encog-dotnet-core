@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,14 +87,14 @@ namespace Encog.App.Analyst.Report
                 ScriptProperties.HeaderDatasourceRawFile);
 
             FileInfo sourceFile = _analyst.Script.ResolveFilename(sourceID);
-            CSVFormat inputFormat = _analyst.Script.DetermineInputFormat(sourceID);
+            CSVFormat format = _analyst.Script.DetermineFormat();
             bool headers = _analyst.Script.ExpectInputHeaders(sourceID);
 
             // read the file
             _rowCount = 0;
             _missingCount = 0;
 
-            var csv = new ReadCSV(sourceFile.ToString(), headers, inputFormat);
+            var csv = new ReadCSV(sourceFile.ToString(), headers, format);
             while (csv.Next())
             {
                 _rowCount++;

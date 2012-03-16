@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -136,6 +136,7 @@ namespace Encog.App.Analyst.Script.Normalize
             _name = field._name;
             _output = field._output;
             _timeSlice = field._timeSlice;
+            FixSingleValue();
         }
 
         /// <summary>
@@ -154,6 +155,7 @@ namespace Encog.App.Analyst.Script.Normalize
             _actualHigh = Double.MinValue;
             _actualLow = Double.MaxValue;
             _action = NormalizationAction.Normalize;
+            FixSingleValue();
         }
 
         /// <summary>
@@ -189,6 +191,7 @@ namespace Encog.App.Analyst.Script.Normalize
             _normalizedHigh = nhigh;
             _normalizedLow = nlow;
             _name = theName;
+            FixSingleValue();
         }
 
         /// <summary>
@@ -209,6 +212,7 @@ namespace Encog.App.Analyst.Script.Normalize
             _action = theAction;
             _normalizedHigh = high;
             _normalizedLow = low;
+            FixSingleValue();
         }
 
         /// <summary>
@@ -403,6 +407,14 @@ namespace Encog.App.Analyst.Script.Normalize
                              - _normalizedHigh*_actualLow + _actualHigh
                              *_normalizedLow)
                             /(_normalizedLow - _normalizedHigh);
+
+            // typically caused by a number that should not have been normalized
+            // (i.e. normalization or actual range is infinitely small.
+            if (Double.IsNaN(result))
+            {
+                return ((NormalizedHigh - NormalizedLow) / 2) + NormalizedLow;
+            } 
+
             return result;
         }
 
@@ -702,14 +714,25 @@ namespace Encog.App.Analyst.Script.Normalize
         /// <summary>
         /// Normalize the specified value.
         /// </summary>
-        ///
         /// <param name="v">The value to normalize.</param>
         /// <returns>The normalized value.</returns>
         public double Normalize(double v)
         {
-            return ((v - _actualLow)/(_actualHigh - _actualLow))
-                   *(_normalizedHigh - _normalizedLow)
-                   + _normalizedLow;
+            double result = ((v - _actualLow) / (_actualHigh - _actualLow))
+                * (_normalizedHigh - _normalizedLow)
+                + _normalizedLow;
+    
+            // typically caused by a number that should not have been normalized
+            // (i.e. normalization or actual range is infinitely small.
+
+            // typically caused by a number that should not have been normalized
+            // (i.e. normalization or actual range is infinitely small.
+            if (Double.IsNaN(result))
+            {
+                return ((NormalizedHigh - NormalizedLow) / 2) + NormalizedLow;
+            } 
+
+            return result;             
         }
 
         /// <inheritdoc/>

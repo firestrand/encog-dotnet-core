@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ namespace Encog.App.Analyst.CSV
         {
             InputFilename = inputFile;
             ExpectInputHeaders = headers;
-            InputFormat = format;
+            Format = format;
 
             Analyzed = true;
             _analyst = theAnalyst;
@@ -123,7 +123,7 @@ namespace Encog.App.Analyst.CSV
                     // be displayed
                     foreach (String heading  in  InputHeadings)
                     {
-                        AppendSeparator(line, OutputFormat);
+                        AppendSeparator(line, Format);
                         line.Append("\"");
                         line.Append(heading);
                         line.Append("\"");
@@ -135,7 +135,7 @@ namespace Encog.App.Analyst.CSV
                     {
                         if (field.Output && !field.Ignored)
                         {
-                            AppendSeparator(line, OutputFormat);
+                            AppendSeparator(line, Format);
                             line.Append("\"Output:");
                             line.Append(CSVHeaders.TagColumn(field.Name, 0,
                                                              field.TimeSlice, false));
@@ -163,9 +163,14 @@ namespace Encog.App.Analyst.CSV
         public void Process(FileInfo outputFile, IMLMethod method)
         {
             var csv = new ReadCSV(InputFilename.ToString(),
-                                  ExpectInputHeaders, InputFormat);
+                                  ExpectInputHeaders, Format);
 
             IMLData output;
+
+            foreach (AnalystField field in _analyst.Script.Normalize.NormalizedFields)
+            {
+                field.Init();
+            } 
 
             int outputLength = _analyst.DetermineTotalInputFieldCount();
 
@@ -235,7 +240,7 @@ namespace Encog.App.Analyst.CSV
                                     // regression
                                     double n = output[outputIndex++];
                                     n = field.DeNormalize(n);
-                                    row.Data[index++] = InputFormat
+                                    row.Data[index++] = Format
                                         .Format(n, Precision);
                                 }
                             }

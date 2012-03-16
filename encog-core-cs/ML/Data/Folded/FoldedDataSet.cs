@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using Encog.Neural.Networks.Training;
+using Encog.ML.Data.Basic;
 
 namespace Encog.ML.Data.Folded
 {
@@ -285,6 +286,17 @@ namespace Encog.ML.Data.Folded
             _foldSize = (int) (_underlying.Count/_numFolds);
             _lastFoldSize = (int) (_underlying.Count - (_foldSize*_numFolds));
             CurrentFold = 0;
+        }
+
+        /// <inheritdoc/>
+        public IMLDataPair this[int x]
+        {
+            get
+            {
+                IMLDataPair result = BasicMLDataPair.CreatePair(InputSize, IdealSize);
+                this.GetRecord(x, result);
+                return result;
+            }
         }
     }
 }

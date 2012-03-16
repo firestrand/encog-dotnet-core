@@ -1,4 +1,26 @@
-﻿using System;
+//
+// Encog(tm) Core v3.1 - .Net Version
+// http://www.heatonresearch.com/encog/
+//
+// Copyright 2008-2012 Heaton Research, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//   
+// For more information on Heaton Research copyrights, licenses 
+// and trademarks visit:
+// http://www.heatonresearch.com/copyright
+//
+using System;
 using Encog.Engine.Network.Activation;
 using Encog.ML;
 using Encog.ML.Data;
@@ -16,73 +38,88 @@ namespace Encog.Plugin.SystemPlugin
         /// <summary>
         /// The factory for simulated annealing.
         /// </summary>
-        private readonly AnnealFactory _annealFactory = new AnnealFactory();
+        private readonly AnnealFactory annealFactory = new AnnealFactory();
 
         /// <summary>
         /// The factory for backprop.
         /// </summary>
-        private readonly BackPropFactory _backpropFactory = new BackPropFactory();
+        private readonly BackPropFactory backpropFactory = new BackPropFactory();
+
+        /// <summary>
+        /// The factory for K2
+        /// </summary>
+        private readonly TrainBayesianFactory bayesianFactory = new TrainBayesianFactory();
 
         /// <summary>
         /// The factory for genetic.
         /// </summary>
-        private readonly GeneticFactory _geneticFactory = new GeneticFactory();
+        private readonly GeneticFactory geneticFactory = new GeneticFactory();
 
         /// <summary>
         /// The factory for LMA.
         /// </summary>
-        private readonly LMAFactory _lmaFactory = new LMAFactory();
+        private readonly LMAFactory lmaFactory = new LMAFactory();
 
         /// <summary>
         /// The factory for Manhattan networks.
         /// </summary>
-        private readonly ManhattanFactory _manhattanFactory = new ManhattanFactory();
+        private readonly ManhattanFactory manhattanFactory = new ManhattanFactory();
 
         /// <summary>
         /// The factory for neighborhood SOM.
         /// </summary>
-        private readonly NeighborhoodSOMFactory _neighborhoodFactory
+        private readonly NeighborhoodSOMFactory neighborhoodFactory
             = new NeighborhoodSOMFactory();
+
+        /// <summary>
+        /// Nelder Mead Factory.
+        /// </summary>
+        private readonly NelderMeadFactory nmFactory = new NelderMeadFactory();
 
         /// <summary>
         /// Factory for PNN.
         /// </summary>
-        private readonly PNNTrainFactory _pnnFactory = new PNNTrainFactory();
+        private readonly PNNTrainFactory pnnFactory = new PNNTrainFactory();
+
+        /// <summary>
+        /// PSO training factory.
+        /// </summary>
+        private readonly PSOFactory psoFactory = new PSOFactory();
 
         /// <summary>
         /// Factory for quick prop.
         /// </summary>
-        private readonly QuickPropFactory _qpropFactory = new QuickPropFactory();
+        private readonly QuickPropFactory qpropFactory = new QuickPropFactory();
 
         /// <summary>
         /// The factory for RPROP.
         /// </summary>
-        private readonly RPROPFactory _rpropFactory = new RPROPFactory();
+        private readonly RPROPFactory rpropFactory = new RPROPFactory();
 
         /// <summary>
         /// The factory for SCG.
         /// </summary>
-        private readonly SCGFactory _scgFactory = new SCGFactory();
+        private readonly SCGFactory scgFactory = new SCGFactory();
 
         /// <summary>
         /// The factory for SOM cluster.
         /// </summary>
-        private readonly ClusterSOMFactory _somClusterFactory = new ClusterSOMFactory();
+        private readonly ClusterSOMFactory somClusterFactory = new ClusterSOMFactory();
 
         /// <summary>
         /// Factory for SVD.
         /// </summary>
-        private readonly RBFSVDFactory _svdFactory = new RBFSVDFactory();
+        private readonly RBFSVDFactory svdFactory = new RBFSVDFactory();
 
         /// <summary>
         /// The factory for basic SVM.
         /// </summary>
-        private readonly SVMFactory _svmFactory = new SVMFactory();
+        private readonly SVMFactory svmFactory = new SVMFactory();
 
         /// <summary>
         /// The factory for SVM-Search.
         /// </summary>
-        private readonly SVMSearchFactory _svmSearchFactory = new SVMSearchFactory();
+        private readonly SVMSearchFactory svmSearchFactory = new SVMSearchFactory();
 
         #region IEncogPluginService1 Members
 
@@ -132,65 +169,86 @@ namespace Encog.Plugin.SystemPlugin
         public IMLTrain CreateTraining(IMLMethod method, IMLDataSet training,
                                        String type, String args)
         {
-            String args2 = args ?? "";
+            String args2 = args;
+
+            if (args2 == null)
+            {
+                args2 = "";
+            }
 
             if (String.Compare(MLTrainFactory.TypeRPROP, type) == 0)
             {
-                return _rpropFactory.Create(method, training, args2);
+                return rpropFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeBackprop, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeBackprop, type) == 0)
             {
-                return _backpropFactory.Create(method, training, args2);
+                return backpropFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeSCG, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeSCG, type) == 0)
             {
-                return _scgFactory.Create(method, training, args2);
+                return scgFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeLma, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeLma, type) == 0)
             {
-                return _lmaFactory.Create(method, training, args2);
+                return lmaFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeSVM, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeSVM, type) == 0)
             {
-                return _svmFactory.Create(method, training, args2);
+                return svmFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeSVMSearch, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeSVMSearch, type) == 0)
             {
-                return _svmSearchFactory.Create(method, training, args2);
+                return svmSearchFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeSOMNeighborhood, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeSOMNeighborhood, type) == 0)
             {
-                return _neighborhoodFactory.Create(method, training, args2);
+                return neighborhoodFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeAnneal, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeAnneal, type) == 0)
             {
-                return _annealFactory.Create(method, training, args2);
+                return annealFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeGenetic, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeGenetic, type) == 0)
             {
-                return _geneticFactory.Create(method, training, args2);
+                return geneticFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeSOMCluster, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeSOMCluster, type) == 0)
             {
-                return _somClusterFactory.Create(method, training, args2);
+                return somClusterFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeManhattan, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeManhattan, type) == 0)
             {
-                return _manhattanFactory.Create(method, training, args2);
+                return manhattanFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeSvd, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeSvd, type) == 0)
             {
-                return _svdFactory.Create(method, training, args2);
+                return svdFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypePNN, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypePNN, type) == 0)
             {
-                return _pnnFactory.Create(method, training, args2);
+                return pnnFactory.Create(method, training, args2);
             }
-            if (String.Compare(MLTrainFactory.TypeQPROP, type) == 0)
+            else if (String.Compare(MLTrainFactory.TypeQPROP, type) == 0)
             {
-                return _qpropFactory.Create(method, training, args2);
+                return qpropFactory.Create(method, training, args2);
             }
-            throw new EncogError("Unknown training type: " + type);
+            else if (MLTrainFactory.TypeBayesian.Equals(type))
+            {
+                return bayesianFactory.Create(method, training, args2);
+            }
+            else if (MLTrainFactory.TypeNelderMead.Equals(type))
+            {
+                return nmFactory.Create(method, training, args2);
+            }
+            else if (MLTrainFactory.TypePSO.Equals(type))
+            {
+                return psoFactory.Create(method, training, args2);
+            }
+
+            else
+            {
+                throw new EncogError("Unknown training type: " + type);
+            }
         }
 
         /// <inheritdoc/>

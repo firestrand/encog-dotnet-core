@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -204,8 +204,7 @@ namespace Encog.ML.SVM
 							params_0, PersistSVM.PARAM_START_ITERATIONS);*/
                     result.Params.svm_type = EncogFileSection.ParseInt(p,
                                                                        ParamSVMType);
-                    result.Params.weight = EncogFileSection.ParseDoubleArray(
-                        p, ParamWeight);
+                    result.Params.weight = section.ParseDoubleArray(p, ParamWeight);
                     result.Params.weight_label = EncogFileSection
                         .ParseIntArray(p, ParamWeightLabel);
                 }

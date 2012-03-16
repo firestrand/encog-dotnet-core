@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,9 +84,7 @@ namespace Encog.App.Analyst.Commands
             FileInfo targetFile = Script.ResolveFilename(targetID);
 
             // get formats
-            CSVFormat inputFormat = Script
-                .DetermineInputFormat(sourceID);
-            CSVFormat outputFormat = Script.DetermineOutputFormat();
+            CSVFormat format = Script.DetermineFormat();
 
             // mark generated
             Script.MarkGenerated(targetID);
@@ -96,8 +94,7 @@ namespace Encog.App.Analyst.Commands
             Analyst.CurrentQuantTask = cluster;
             cluster.Report = new AnalystReportBridge(Analyst);
             bool headers = Script.ExpectInputHeaders(sourceID);
-            cluster.Analyze(Analyst, sourceFile, headers, inputFormat);
-            cluster.OutputFormat = outputFormat;
+            cluster.Analyze(Analyst, sourceFile, headers, format);
             cluster.Process(targetFile, clusters, Analyst, DefaultIterations);
             Analyst.CurrentQuantTask = null;
             return cluster.ShouldStop();

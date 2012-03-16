@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Encog.Util.CSV;
+using Encog.Util;
 
 namespace Encog.Persist
 {
@@ -102,6 +104,7 @@ namespace Encog.Persist
             try
             {
                 String line;
+                var largeArrays = new List<double[]>();
 
                 while ((line = reader.ReadLine()) != null)
                 {
@@ -162,12 +165,18 @@ namespace Encog.Persist
 
                             currentSubSectionName = newSubSection;
                         }
+                        section.LargeArrays = largeArrays;
                         return section;
                     }
                     else if (line.Length < 1)
                     {
                         continue;
                     }
+                    else if (line.StartsWith("##double"))
+                    {
+                        double[] d = ReadLargeArray(line);
+                        largeArrays.Add(d);
+                    } 
                     else
                     {
                         if (currentSectionName.Length < 1)
@@ -195,12 +204,47 @@ namespace Encog.Persist
 
                 currentSectionName = "";
                 currentSubSectionName = "";
+                section.LargeArrays = largeArrays;
                 return section;
             }
             catch (IOException ex)
             {
                 throw new PersistError(ex);
             }
+        }
+
+        /// <summary>
+        /// Called internally to read a large array.
+        /// </summary>
+        /// <param name="line">The line containing the beginning of a large array.</param>
+        /// <returns>The array read.</returns>
+        private double[] ReadLargeArray(String line)
+        {
+            String str = line.Substring(9);
+            int l = int.Parse(str);
+            double[] result = new double[l];
+
+            int index = 0;
+            while ((line = this.reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+
+                // is it a comment
+                if (line.StartsWith("//"))
+                {
+                    continue;
+                }
+                else if (line.StartsWith("##end"))
+                {
+                    break;
+                }
+
+                double[] t = NumberList.FromList(CSVFormat.EgFormat, line);
+                EngineArray.ArrayCopy(t, 0, result, index, t.Length);
+                index += t.Length;
+            }
+
+            return result;
         }
     }
 }

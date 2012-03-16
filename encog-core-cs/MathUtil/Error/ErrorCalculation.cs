@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace Encog.MathUtil.Error
 
         /// <summary>
         /// The error calculation mode, this is static and therefore global to
-        /// all Enocg training. If a particular training method only supports a
+        /// all Encog training. If a particular training method only supports a
         /// particular error calculation method, it may override this value. It will
         /// not change the value set here, rather the training will occur with its
         /// preferred training method. Currently the only training method that does
@@ -154,6 +154,15 @@ namespace Encog.MathUtil.Error
             _globalError += delta*delta;
 
             _setSize++;
+        }
+
+        /// <summary>
+        /// Calculate the error as sum of squares.
+        /// </summary>
+        /// <returns>The error.</returns>
+        public double CalculateSSE()
+        {
+            return _globalError / 2;
         }
     }
 }

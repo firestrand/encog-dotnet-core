@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,15 +20,16 @@
 // and trademarks visit:
 // http://www.heatonresearch.com/copyright
 //
-using System;
-using Encog.MathUtil.Matrices;
+using Encog.MathUtil.Error;
 using Encog.MathUtil.Matrices.Decomposition;
+using Encog.MathUtil.Matrices.Hessian;
 using Encog.ML;
 using Encog.ML.Data;
 using Encog.ML.Data.Basic;
 using Encog.ML.Train;
 using Encog.Neural.Networks.Structure;
 using Encog.Neural.Networks.Training.Propagation;
+using Encog.Util.Concurrency;
 using Encog.Util.Validate;
 
 namespace Encog.Neural.Networks.Training.Lma
@@ -36,394 +37,290 @@ namespace Encog.Neural.Networks.Training.Lma
     /// <summary>
     /// Trains a neural network using a Levenberg Marquardt algorithm (LMA). This
     /// training technique is based on the mathematical technique of the same name.
-    /// http://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm
-    /// The LMA training technique has some important limitations that you should be
-    /// aware of, before using it.
-    /// Only neural networks that have a single output neuron can be used with this
-    /// training technique.
-    /// The entire training set must be loaded into memory. Because of this an
-    /// Indexable training set must be used.
-    /// However, despite these limitations, the LMA training technique can be a very
-    /// effective training method.
-    /// References: - http://www-alg.ist.hokudai.ac.jp/~jan/alpha.pdf -
-    /// http://www.inference.phy.cam.ac.uk/mackay/Bayes_FAQ.html
-    /// ----------------------------------------------------------------
-    /// This implementation of the Levenberg Marquardt algorithm is based heavily on code
-    /// published in an article by Cesar Roberto de Souza.  The original article can be
-    /// found here:
-    /// http://crsouza.blogspot.com/2009/11/neural-network-learning-by-levenberg_18.html
-    /// Portions of this class are under the following copyright/license.
-    /// Copyright 2009 by Cesar Roberto de Souza, Released under the LGPL.
-    /// </summary>
+    /// 
+    /// The LMA interpolates between the Gauss-Newton algorithm (GNA) and the 
+    /// method of gradient descent (similar to what is used by backpropagation. 
+    /// The lambda parameter determines the degree to which GNA and Gradient 
+    /// Descent are used.  A lower lambda results in heavier use of GNA, 
+    /// whereas a higher lambda results in a heavier use of gradient descent.
+    /// 
+    /// Each iteration starts with a low lambda that  builds if the improvement 
+    /// to the neural network is not desirable.  At some point the lambda is
+    /// high enough that the training method reverts totally to gradient descent.
+    /// 
+    /// This allows the neural network to be trained effectively in cases where GNA
+    /// provides the optimal training time, but has the ability to fall back to the
+    /// more primitive gradient descent method
     ///
-    public class LevenbergMarquardtTraining : BasicTraining
+    /// LMA finds only a local minimum, not a global minimum.
+    ///  
+    /// References:
+    /// 
+    /// C. R. Souza. (2009). Neural Network Learning by the Levenberg-Marquardt Algorithm 
+    /// with Bayesian Regularization. Website, available from: 
+    /// http://crsouza.blogspot.com/2009/11/neural-network-learning-by-levenberg_18.html
+    /// 
+    /// http://www.heatonresearch.com/wiki/LMA
+    /// http://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm
+    /// http://en.wikipedia.org/wiki/Finite_difference_method
+    /// http://mathworld.wolfram.com/FiniteDifference.html 
+    /// http://www-alg.ist.hokudai.ac.jp/~jan/alpha.pdf -
+    /// http://www.inference.phy.cam.ac.uk/mackay/Bayes_FAQ.html
+    /// </summary>
+    public class LevenbergMarquardtTraining : BasicTraining, IMultiThreadable
     {
         /// <summary>
         /// The amount to scale the lambda by.
         /// </summary>
-        ///
-        public const double ScaleLambda = 10.0d;
+        public const double ScaleLambda = 10.0;
 
         /// <summary>
         /// The max amount for the LAMBDA.
         /// </summary>
-        ///
-        public const double LambdaMax = 1e25d;
+        public const double LambdaMax = 1e25;
 
         /// <summary>
         /// The diagonal of the hessian.
         /// </summary>
-        ///
         private readonly double[] _diagonal;
 
         /// <summary>
-        /// The calculated gradients.
+        /// Utility class to compute the Hessian.
         /// </summary>
-        ///
-        private readonly double[] _gradient;
-
-        /// <summary>
-        /// The "hessian" matrix as a 2d array.
-        /// </summary>
-        ///
-        private readonly double[][] _hessian;
-
-        /// <summary>
-        /// The "hessian" matrix, used by the LMA.
-        /// </summary>
-        ///
-        private readonly Matrix _hessianMatrix;
+        private readonly IComputeHessian _hessian;
 
         /// <summary>
         /// The training set that we are using to train.
         /// </summary>
-        ///
         private readonly IMLDataSet _indexableTraining;
 
         /// <summary>
         /// The network that is to be trained.
         /// </summary>
-        ///
         private readonly BasicNetwork _network;
 
         /// <summary>
         /// The training elements.
         /// </summary>
-        ///
         private readonly IMLDataPair _pair;
-
-        /// <summary>
-        /// The number of "parameters" in the LMA algorithm. The parameters are what
-        /// the LMA adjusts to achieve the desired outcome. For neural network
-        /// optimization, the parameters are the weights and bias values.
-        /// </summary>
-        ///
-        private readonly int _parametersLength;
 
         /// <summary>
         /// The training set length.
         /// </summary>
-        ///
         private readonly int _trainingLength;
 
         /// <summary>
-        /// The alpha is multiplied by sum squared of weights. This scales the effect
-        /// that the sum squared of the weights has.
+        /// How many weights are we dealing with?
         /// </summary>
-        ///
-        private double _alpha;
-
-        /// <summary>
-        /// The beta is multiplied by the sum squared of the errors.
-        /// </summary>
-        ///
-        private double _beta;
+        private readonly int _weightCount;
 
         /// <summary>
         /// The amount to change the weights by.
         /// </summary>
-        ///
         private double[] _deltas;
-
-        /// <summary>
-        /// Gamma, used for Bayesian regularization.
-        /// </summary>
-        ///
-        private double _gamma;
 
         /// <summary>
         /// The lambda, or damping factor. This is increased until a desirable
         /// adjustment is found.
         /// </summary>
-        ///
         private double _lambda;
-
-        /// <summary>
-        /// Should we use Bayesian regularization.
-        /// </summary>
-        ///
-        private bool _useBayesianRegularization;
 
         /// <summary>
         /// The neural network weights and bias values.
         /// </summary>
-        ///
         private double[] _weights;
 
         /// <summary>
-        /// Construct the LMA object.
+        /// Construct the LMA object. Use the chain rule for Hessian calc.
         /// </summary>
-        ///
         /// <param name="network">The network to train. Must have a single output neuron.</param>
         /// <param name="training">The training data to use. Must be indexable.</param>
         public LevenbergMarquardtTraining(BasicNetwork network,
-                                          IMLDataSet training) : base(TrainingImplementationType.Iterative)
+                                          IMLDataSet training)
+            : this(network, training, new HessianCR())
+        {
+        }
+
+        /// <summary>
+        /// Construct the LMA object. 
+        /// </summary>
+        /// <param name="network">The network to train. Must have a single output neuron.</param>
+        /// <param name="training">The training data to use. Must be indexable.</param>
+        /// <param name="h">The Hessian calculator to use.</param>
+        public LevenbergMarquardtTraining(BasicNetwork network,
+                                          IMLDataSet training, IComputeHessian h)
+            : base(TrainingImplementationType.Iterative)
         {
             ValidateNetwork.ValidateMethodToData(network, training);
-            if (network.OutputCount != 1)
-            {
-                throw new TrainingError(
-                    "Levenberg Marquardt requires an output layer with a single neuron.");
-            }
 
             Training = training;
             _indexableTraining = Training;
-            _network = network;
+            this._network = network;
             _trainingLength = (int) _indexableTraining.Count;
-            _parametersLength = _network.Structure.CalculateSize();
-            _hessianMatrix = new Matrix(_parametersLength,
-                                       _parametersLength);
-            _hessian = _hessianMatrix.Data;
-            _alpha = 0.0d;
-            _beta = 1.0d;
-            _lambda = 0.1d;
-            _deltas = new double[_parametersLength];
-            _gradient = new double[_parametersLength];
-            _diagonal = new double[_parametersLength];
+            _weightCount = this._network.Structure.CalculateSize();
+            _lambda = 0.1;
+            _deltas = new double[_weightCount];
+            _diagonal = new double[_weightCount];
 
             var input = new BasicMLData(
                 _indexableTraining.InputSize);
             var ideal = new BasicMLData(
                 _indexableTraining.IdealSize);
             _pair = new BasicMLDataPair(input, ideal);
+
+            _hessian = h;
+            _hessian.Init(network, training);
         }
 
-
-        /// <value>The trained network.</value>
-        public override IMLMethod Method
-        {
-            get { return _network; }
-        }
-
-
-        /// <summary>
-        /// Set if Bayesian regularization should be used.
-        /// </summary>
-        public bool UseBayesianRegularization
-        {
-            get { return _useBayesianRegularization; }
-            set { _useBayesianRegularization = value; }
-        }
-
-        /// <inheritdoc />
-        public override sealed bool CanContinue
+        /// <inheritdoc/>
+        public override bool CanContinue
         {
             get { return false; }
         }
 
         /// <summary>
-        /// Return the sum of the diagonal.
+        /// The trained neural network.
         /// </summary>
-        ///
-        /// <param name="m">The matrix to sum.</param>
-        /// <returns>The trace of the matrix.</returns>
-        public static double Trace(double[][] m)
+        public override IMLMethod Method
         {
-            double result = 0.0d;
-            for (int i = 0; i < m.Length; i++)
-            {
-                result += m[i][i];
-            }
-            return result;
+            get { return _network; }
         }
 
         /// <summary>
-        /// Calculate the Hessian matrix.
+        /// The Hessian calculation method used.
         /// </summary>
-        ///
-        /// <param name="jacobian">The Jacobian matrix.</param>
-        /// <param name="errors">The errors.</param>
-        public void CalculateHessian(double[][] jacobian,
-                                     double[] errors)
+        public IComputeHessian Hessian
         {
-            for (int i = 0; i < _parametersLength; i++)
-            {
-                // Compute Jacobian Matrix Errors
-                double s = 0.0d;
-                for (int j = 0; j < _trainingLength; j++)
-                {
-                    s += jacobian[j][i]*errors[j];
-                }
-                _gradient[i] = s;
+            get { return _hessian; }
+        }
 
-                // Compute Quasi-Hessian Matrix using Jacobian (H = J'J)
-                for (int j = 0; j < _parametersLength; j++)
+        #region IMultiThreadable Members
+
+        /// <summary>
+        /// The thread count, specify 0 for Encog to automatically select (default).  
+        /// If the underlying Hessian calculator does not support multithreading, an error 
+        /// will be thrown.  The default chain rule calc does support multithreading.
+        /// </summary>
+        public int ThreadCount
+        {
+            get
+            {
+                if (_hessian is IMultiThreadable)
                 {
-                    double c = 0.0d;
-                    for (int k = 0; k < _trainingLength; k++)
-                    {
-                        c += jacobian[k][i]*jacobian[k][j];
-                    }
-                    _hessian[i][j] = _beta*c;
+                    return ((IMultiThreadable) _hessian).ThreadCount;
+                }
+                throw new TrainingError("The Hessian object in use(" + _hessian.GetType().Name +
+                                        ") does not support multi-threaded mode.");
+            }
+            set
+            {
+                if (_hessian is IMultiThreadable)
+                {
+                    ((IMultiThreadable) _hessian).ThreadCount = value;
+                }
+                else
+                {
+                    throw new TrainingError("The Hessian object in use(" + _hessian.GetType().Name +
+                                            ") does not support multi-threaded mode.");
                 }
             }
+        }
 
-            for (int i = 0; i < _parametersLength; i++)
+        #endregion
+
+        /// <summary>
+        /// Save the diagonal of the Hessian.  Will be used to apply the lambda.
+        /// </summary>
+        private void SaveDiagonal()
+        {
+            double[][] h = _hessian.Hessian;
+            for (int i = 0; i < _weightCount; i++)
             {
-                _diagonal[i] = _hessian[i][i];
+                _diagonal[i] = h[i][i];
             }
         }
 
         /// <summary>
-        /// Calculate the sum squared of the weights.
+        /// Calculate the SSE error.
         /// </summary>
-        ///
-        /// <returns>The sum squared of the weights.</returns>
-        private double CalculateSumOfSquaredWeights()
+        /// <returns>The SSE error with the current weights.</returns>
+        private double CalculateError()
         {
-            double result = 0;
+            var result = new ErrorCalculation();
 
-
-            foreach (double weight  in  _weights)
+            for (int i = 0; i < _trainingLength; i++)
             {
-                result += weight*weight;
+                _indexableTraining.GetRecord(i, _pair);
+                IMLData actual = _network.Compute(_pair.Input);
+                result.UpdateError(actual.Data, _pair.Ideal.Data, _pair.Significance);
             }
 
-            return result/2.0d;
+            return result.CalculateSSE();
         }
 
+        /// <summary>
+        /// Apply the lambda, this will dampen the GNA.
+        /// </summary>
+        private void ApplyLambda()
+        {
+            double[][] h = _hessian.Hessian;
+            for (int i = 0; i < _weightCount; i++)
+            {
+                h[i][i] = _diagonal[i] + _lambda;
+            }
+        }
 
         /// <summary>
         /// Perform one iteration.
         /// </summary>
-        ///
         public override void Iteration()
         {
-            LUDecomposition decomposition = null;
-
+            LUDecomposition decomposition;
             PreIteration();
 
+            _hessian.Clear();
             _weights = NetworkCODEC.NetworkToArray(_network);
 
-            IComputeJacobian j = new JacobianChainRule(_network,
-                                                      _indexableTraining);
+            _hessian.Compute();
+            double currentError = _hessian.SSE;
+            SaveDiagonal();
 
-            double sumOfSquaredErrors = j.Calculate(_weights);
-            double sumOfSquaredWeights = CalculateSumOfSquaredWeights();
+            double startingError = currentError;
+            bool done = false;
 
-            // this.setError(j.getError());
-            CalculateHessian(j.Jacobian, j.RowErrors);
-
-            // Define the objective function
-            // bayesian regularization objective function
-            double objective = _beta*sumOfSquaredErrors + _alpha
-                               *sumOfSquaredWeights;
-            double current = objective + 1.0d;
-
-            // Start the main Levenberg-Macquardt method
-            _lambda /= ScaleLambda;
-
-            // We'll try to find a direction with less error
-            // (or where the objective function is smaller)
-            while ((current >= objective)
-                   && (_lambda < LambdaMax))
+            while (!done)
             {
-                _lambda *= ScaleLambda;
+                ApplyLambda();
+                decomposition = new LUDecomposition(_hessian.HessianMatrix);
 
-                // Update diagonal (Levenberg-Marquardt formula)
-                for (int i = 0; i < _parametersLength; i++)
+                if (decomposition.IsNonsingular)
                 {
-                    _hessian[i][i] = _diagonal[i]
-                                    + (_lambda + _alpha);
+                    _deltas = decomposition.Solve(_hessian.Gradients);
+
+                    UpdateWeights();
+                    currentError = CalculateError();
+
+                    if (currentError < startingError)
+                    {
+                        _lambda /= LevenbergMarquardtTraining.ScaleLambda;
+                        done = true;
+                    }
                 }
 
-                // Decompose to solve the linear system
-                decomposition = new LUDecomposition(_hessianMatrix);
-
-                // Check if the Jacobian has become non-invertible
-                if (!decomposition.IsNonsingular)
+                if (!done)
                 {
-                    continue;
+                    _lambda *= LevenbergMarquardtTraining.ScaleLambda;
+                    if (_lambda > LevenbergMarquardtTraining.LambdaMax)
+                    {
+                        _lambda = LevenbergMarquardtTraining.LambdaMax;
+                        done = true;
+                    }
                 }
-
-                // Solve using LU (or SVD) decomposition
-                _deltas = decomposition.Solve(_gradient);
-
-                // Update weights using the calculated deltas
-                sumOfSquaredWeights = UpdateWeights();
-
-                // Calculate the new error
-                sumOfSquaredErrors = 0.0d;
-                for (int i = 0; i < _trainingLength; i++)
-                {
-                    _indexableTraining.GetRecord(i, _pair);
-                    IMLData actual = _network
-                        .Compute(_pair.Input);
-                    double e = _pair.Ideal[0]
-                               - actual[0];
-                    sumOfSquaredErrors += e*e;
-                }
-                sumOfSquaredErrors /= 2.0d;
-
-                // Update the objective function
-                current = _beta*sumOfSquaredErrors + _alpha
-                          *sumOfSquaredWeights;
-
-                // If the object function is bigger than before, the method
-                // is tried again using a greater dumping factor.
             }
 
-            // If this iteration caused a error drop, then next iteration
-            // will use a smaller damping factor.
-            _lambda /= ScaleLambda;
-
-            if (_useBayesianRegularization && (decomposition != null))
-            {
-                // Compute the trace for the inverse Hessian
-                double trace = Trace(decomposition.Inverse());
-
-                // Poland update's formula:
-                _gamma = _parametersLength - (_alpha*trace);
-                _alpha = _parametersLength
-                        /(2.0d*sumOfSquaredWeights + trace);
-                _beta = Math.Abs((_trainingLength - _gamma)
-                                /(2.0d*sumOfSquaredErrors));
-            }
-
-            Error = sumOfSquaredErrors;
+            Error = currentError;
 
             PostIteration();
-        }
-
-        /// <summary>
-        /// Update the weights.
-        /// </summary>
-        ///
-        /// <returns>The sum squared of the weights.</returns>
-        public double UpdateWeights()
-        {
-            double result = 0;
-            var w = (double[]) _weights.Clone();
-
-            for (int i = 0; i < w.Length; i++)
-            {
-                w[i] += _deltas[i];
-                result += w[i]*w[i];
-            }
-
-            NetworkCODEC.ArrayToNetwork(w, _network);
-
-            return result/2.0d;
         }
 
         /// <inheritdoc/>
@@ -435,6 +332,21 @@ namespace Encog.Neural.Networks.Training.Lma
         /// <inheritdoc/>
         public override void Resume(TrainingContinuation state)
         {
+        }
+
+        /// <summary>
+        /// Update the weights in the neural network.
+        /// </summary>
+        public void UpdateWeights()
+        {
+            var w = (double[]) _weights.Clone();
+
+            for (int i = 0; i < w.Length; i++)
+            {
+                w[i] += _deltas[i];
+            }
+
+            NetworkCODEC.ArrayToNetwork(w, _network);
         }
     }
 }

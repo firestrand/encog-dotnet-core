@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -272,6 +272,7 @@ namespace Encog.Neural.Prune
 
             // construct the new weights
             int weightsIndex = 0;
+            int oldWeightsIndex = 0;
 
             for (int fromLayer = flat.LayerCounts.Length - 2; fromLayer >= 0; fromLayer--)
             {
@@ -297,8 +298,7 @@ namespace Encog.Neural.Prune
                         }
                         else
                         {
-                            newWeights[weightsIndex++] = _network.GetWeight(
-                                fromLayer, fromNeuron, toNeuron);
+                            newWeights[weightsIndex++] = _network.Flat.Weights[oldWeightsIndex++];
                         }
                     }
                 }
@@ -533,6 +533,7 @@ namespace Encog.Neural.Prune
             }
 
             flat.LayerOutput = new double[neuronCount];
+            flat.LayerSums = new double[neuronCount];
             flat.ClearContext();
 
             flat.InputCount = flat.LayerFeedCounts[flat.LayerCounts.Length - 1];

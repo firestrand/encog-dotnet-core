@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ namespace Encog.Util
     /// </summary>
     public class EngineArray
     {
+        public const int DoubleSize = sizeof(double);
+
         /// <summary>
         /// Copy a double array.
         /// </summary>
@@ -134,7 +136,8 @@ namespace Encog.Util
         /// <param name="size">The size to copy.</param>
         public static void ArrayCopy(double[] source, int sourceIndex, double[] output, int targetIndex, int size)
         {
-            Array.Copy(source, sourceIndex, output, targetIndex, size);
+            //Array.Copy(source, sourceIndex, output, targetIndex, size);
+            Buffer.BlockCopy(source, sourceIndex*DoubleSize,output,targetIndex*DoubleSize,size*DoubleSize);
         }
 
         /// <summary>
@@ -179,6 +182,43 @@ namespace Encog.Util
                     return i;
             }
             return -1;
+        }
+
+
+        /// <summary>
+        /// Gets the last N closing values of a double serie;
+        /// copied in a new double serie.
+        /// </summary>
+        /// <param name="lenth">The lenth to get.</param>
+        /// <param name="closes"></param>
+        /// <returns>a double serie with the last n requested values.</returns>
+        public double[] TransferNvaluesOfSerie(int lenth, double [] closes)
+        {
+            if (closes != null)
+            {
+                double[] output;
+
+                if (closes.Length > lenth)
+                {
+                    //we have more closing values than our length so we'll return values based on last - Length.
+                    int startIndex = closes.Length - lenth;
+                    output = new double[lenth];
+                    EngineArray.ArrayCopy(closes, startIndex, output, 0, lenth);
+                    return output;
+                }
+                if (closes.Length == lenth)
+                {
+                    //we have the same values , so we just return the full closing values.
+                    int startIndex = closes.Length - lenth;
+                    output = new double[lenth];
+                    EngineArray.ArrayCopy(closes, startIndex, output, 0, lenth);
+                    return output;
+                }
+            }
+
+            //we didn't get any right values to return N lenght of the serie.
+            return null;
+
         }
 
         /// <summary>
@@ -364,6 +404,131 @@ namespace Encog.Util
                 }
             }
             return result;
+        }
+
+
+        /// <summary>
+        /// Creates a jagged array and initializes it.
+        /// You can virtually create any kind of jagged array up to N dimension.
+        /// double[][] resultingArray = CreateArray  <double[ ]> (2, () => CreateArray<double>(100, () => 0));
+        /// Create a double[2] [100] , with all values at 0..
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="cnt">The CNT.</param>
+        /// <param name="itemCreator">The item creator.</param>
+        /// <returns></returns>
+        public static T[] CreateArray<T>(int cnt, Func<T> itemCreator)
+        {
+            T[] result = new T[cnt];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = itemCreator();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Fill the array with the specified value.
+        /// </summary>
+        /// <param name="array">The array.</param>
+        /// <param name="v">The value.</param>
+        public static void Fill(bool[] array, bool v)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = v;
+            }
+        }
+
+        /// <summary>
+        /// Add two vectors.
+        /// </summary>
+        /// <param name="d">First vector.</param>
+        /// <param name="m">Second vector.</param>
+        /// <returns>Result vector.</returns>
+        public static double[] Add(double[] d, double[] m)
+        {
+            double[] result = new double[d.Length];
+            for (int i = 0; i < d.Length; i++)
+            {
+                result[i] = d[i] + m[i];
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Subtract two vectors.
+        /// </summary>
+        /// <param name="a">First vector.</param>
+        /// <param name="b">Second vector.</param>
+        /// <returns>Result vector.</returns>
+        public static double[] Subtract(double[] a, double[] b)
+        {
+            double[] result = new double[a.Length];
+            for (int i = 0; i < a.Length; i++)
+            {
+                result[i] = a[i] - b[i];
+            }
+            return result;
+        }
+
+        internal static int[][] AllocateInt2D(int rows, int cols)
+        {
+            var result = new int[rows][];
+            for (int i = 0; i < rows; i++)
+            {
+                result[i] = new int[cols];
+            }
+            return result;
+
+        }
+
+        public static double[][][] AllocDouble3D(int x, int y, int z)
+        {
+            var result = new double[x][][];
+            for (int i = 0; i < x; i++)
+            {
+                result[i] = new double[y][];
+                for (int j = 0; j < y; j++)
+                {
+                    result[i][j] = new double[z];
+                }
+            }
+            return result;
+
+        }
+
+        /// <summary>
+        /// Copy one double 2d array to another.
+        /// </summary>
+        /// <param name="source">The source array.</param>
+        /// <param name="target">The target array.</param>
+        public static void ArrayCopy(double[][] source, double[][] target)
+        {
+            for(var row=0;row<source.Length;row++)
+            {
+                for(var col=0;col<source[row].Length;col++)
+                {
+                    target[row][col] = source[row][col];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Calculate the Euclidean distance between two vectors.
+        /// </summary>
+        /// <param name="p1">The first vector.</param>
+        /// <param name="p2">The second vector.</param>
+        /// <returns>The distance.</returns>
+        public static double EuclideanDistance(double[] p1, double[] p2)
+        {
+            double sum = 0;
+            for (int i = 0; i < p1.Length; i++)
+            {
+                double d = p1[i] - p2[i];
+                sum += d * d;
+            }
+            return Math.Sqrt(sum);
         }
     }
 }

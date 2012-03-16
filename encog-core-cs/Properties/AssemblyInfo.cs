@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 
 [assembly: AssemblyTitle("Encog")]
-[assembly: AssemblyDescription("Encog Artificial Intelligence Framework v3.0")]
+[assembly: AssemblyDescription("Encog Artificial Intelligence Framework v3.1")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Heaton Research, Inc.")]
 [assembly: AssemblyProduct("Encog")]

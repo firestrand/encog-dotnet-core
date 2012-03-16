@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -176,29 +176,13 @@ namespace Encog.App.Analyst.Script
         {
             _tasks.Clear();
         }
-
-        /// <summary>
-        /// Determine the input format for the specified file.
-        /// </summary>
-        ///
-        /// <param name="sourceID">The file.</param>
-        /// <returns>The input format.</returns>
-        public CSVFormat DetermineInputFormat(String sourceID)
-        {
-            String rawID = Properties.GetPropertyString(
-                ScriptProperties.HeaderDatasourceRawFile);
-
-            CSVFormat result = Properties.GetPropertyCSVFormat(sourceID.Equals(rawID) ? ScriptProperties.HeaderDatasourceSourceFormat : ScriptProperties.SetupConfigCSVFormat);
-
-            return result;
-        }
-
+        
         /// <summary>
         /// Determine the output format.
         /// </summary>
         ///
         /// <returns>The output format.</returns>
-        public CSVFormat DetermineOutputFormat()
+        public CSVFormat DetermineFormat()
         {
             return Properties.GetPropertyCSVFormat(
                 ScriptProperties.SetupConfigCSVFormat);
@@ -347,6 +331,16 @@ namespace Encog.App.Analyst.Script
         {
             var s = new ScriptSave(this);
             s.Save(stream);
+        }
+
+        /// <summary>
+        /// Find the specified analyst field, by name.
+        /// </summary>
+        /// <param name="name">The name of the analyst field.</param>
+        /// <returns>The analyst field.</returns>
+        public AnalystField FindAnalystField(string name)
+        {
+            return _normalize.NormalizedFields.FirstOrDefault(f => string.Compare(name, f.Name, true) == 0);
         }
     }
 }

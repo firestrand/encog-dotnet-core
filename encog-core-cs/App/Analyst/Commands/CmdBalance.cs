@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,9 +100,8 @@ namespace Encog.App.Analyst.Commands
             Script.MarkGenerated(targetID);
 
             // get formats
-            CSVFormat inputFormat = Script
-                .DetermineInputFormat(sourceID);
-            CSVFormat outputFormat = Script.DetermineOutputFormat();
+            CSVFormat inputFormat = Script.DetermineFormat();
+            CSVFormat outputFormat = Script.DetermineFormat();
 
             // prepare to normalize
             var balance = new BalanceCSV {Script = Script};
@@ -111,7 +110,6 @@ namespace Encog.App.Analyst.Commands
 
             bool headers = Script.ExpectInputHeaders(sourceID);
             balance.Analyze(sourceFile, headers, inputFormat);
-            balance.OutputFormat = outputFormat;
             balance.ProduceOutputHeaders = true;
             balance.Process(targetFile, targetFieldIndex, countPer);
             Analyst.CurrentQuantTask = null;

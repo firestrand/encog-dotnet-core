@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,6 +118,11 @@ namespace Encog.App.Analyst.CSV.Normalize
                         d = stat.Normalize(d);
                         output[outputIndex++] = d;
                     }
+                    else if (stat.Action == NormalizationAction.PassThrough)
+                    {
+                        double d = csv.Format.Parse(str);
+                        output[outputIndex++] = d;
+                    } 
                     else
                     {
                         double[] d = stat.Encode(str.Trim());
@@ -146,7 +151,7 @@ namespace Encog.App.Analyst.CSV.Normalize
                             EncogAnalyst theAnalyst)
         {
             InputFilename = inputFilename;
-            InputFormat = inputFormat;
+            Format = inputFormat;
             ExpectInputHeaders = expectInputHeaders;
             _analyst = theAnalyst;
             Analyzed = true;
@@ -183,7 +188,7 @@ namespace Encog.App.Analyst.CSV.Normalize
             try
             {
                 csv = new ReadCSV(InputFilename.ToString(),
-                                  ExpectInputHeaders, InputFormat);
+                                  ExpectInputHeaders, Format);
 
 				file.Delete();
                 tw = new StreamWriter(file.OpenWrite());
@@ -214,7 +219,7 @@ namespace Encog.App.Analyst.CSV.Normalize
                     if (output != null)
                     {
                         var line = new StringBuilder();
-                        NumberList.ToList(OutputFormat, line, output);
+                        NumberList.ToList(Format, line, output);
                         tw.WriteLine(line);
                     }
                 }
@@ -265,7 +270,7 @@ namespace Encog.App.Analyst.CSV.Normalize
         {
             InputFilename = file;
             ExpectInputHeaders = headers;
-            InputFormat = format;
+            Format = format;
         }
 
         /// <summary>
@@ -283,7 +288,7 @@ namespace Encog.App.Analyst.CSV.Normalize
 
                 for (int i = 0; i < needed; i++)
                 {
-                    AppendSeparator(line, InputFormat);
+                    AppendSeparator(line, Format);
                     line.Append('\"');
                     line.Append(CSVHeaders.TagColumn(stat.Name, i,
                                                      stat.TimeSlice, needed > 1));

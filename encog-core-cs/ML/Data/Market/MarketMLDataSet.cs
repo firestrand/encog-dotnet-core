@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ namespace Encog.ML.Data.Market
         /// <summary>
         /// A map between the data points and actual data.
         /// </summary>
-        private readonly IDictionary<int, TemporalPoint> _pointIndex =
-            new Dictionary<int, TemporalPoint>();
+        private readonly IDictionary<Int64, TemporalPoint> _pointIndex =
+            new Dictionary<Int64, TemporalPoint>();
 
         /// <summary>
         /// Construct a market data set object.
@@ -53,9 +53,8 @@ namespace Encog.ML.Data.Market
         /// <param name="loader">The loader to use to get the financial data.</param>
         /// <param name="inputWindowSize">The input window size, that is how many datapoints do we use to predict.</param>
         /// <param name="predictWindowSize">How many datapoints do we want to predict.</param>
-        public MarketMLDataSet(IMarketLoader loader,
-                                   int inputWindowSize, int predictWindowSize)
-            : base(inputWindowSize, predictWindowSize)
+        public MarketMLDataSet(IMarketLoader loader,Int64 inputWindowSize, Int64 predictWindowSize)
+            : base((int)inputWindowSize, (int)predictWindowSize)
         {
             _loader = loader;
             SequenceGrandularity = TimeUnit.Days;
@@ -68,8 +67,8 @@ namespace Encog.ML.Data.Market
         /// <param name="inputWindowSize">Size of the input window.</param>
         /// <param name="predictWindowSize">Size of the predict window.</param>
         /// <param name="unit">The time unit to use.</param>
-        public MarketMLDataSet(IMarketLoader loader, int inputWindowSize, int predictWindowSize, TimeUnit unit)
-            : base(inputWindowSize, predictWindowSize)
+        public MarketMLDataSet(IMarketLoader loader,  Int64 inputWindowSize, Int64 predictWindowSize, TimeUnit unit)
+            : base((int)inputWindowSize, (int)predictWindowSize)
         {
 
             _loader = loader;
@@ -95,7 +94,7 @@ namespace Encog.ML.Data.Market
             {
                 throw new MarketError(
                     "Only MarketDataDescription objects may be used "
-                    + "with the MarketNeuralDataSet container.");
+                    + "with the MarketMLDataSet container.");
             }
             base.AddDescription(desc);
         }
@@ -108,7 +107,7 @@ namespace Encog.ML.Data.Market
         /// <returns>Returns the TemporalPoint created for the specified date.</returns>
         public override TemporalPoint CreatePoint(DateTime when)
         {
-            int sequence = GetSequenceFromDate(when);
+            Int64 sequence = (Int64)GetSequenceFromDate(when);
             TemporalPoint result;
 
             if (_pointIndex.ContainsKey(sequence))
@@ -118,7 +117,7 @@ namespace Encog.ML.Data.Market
             else
             {
                 result = base.CreatePoint(when);
-                _pointIndex[result.Sequence] = result;
+                _pointIndex[(int)result.Sequence] = result;
             }
 
             return result;
@@ -142,15 +141,25 @@ namespace Encog.ML.Data.Market
             Points.Clear();
 
             // first obtain a collection of symbols that need to be looked up
-            IDictionary<TickerSymbol, object> set = new Dictionary<TickerSymbol, object>();
-            foreach (TemporalDataDescription desc in Descriptions)
+            IDictionary<TickerSymbol, object> symbolSet = new Dictionary<TickerSymbol, object>();
+            foreach (MarketDataDescription desc in Descriptions)
             {
-                var mdesc = (MarketDataDescription) desc;
-                set[mdesc.Ticker] = null;
+                if (symbolSet.Count == 0)
+                {
+                    symbolSet[desc.Ticker] = null;
+                }
+                foreach (TickerSymbol ts in symbolSet.Keys)
+                {
+                    if (!ts.Equals(desc.Ticker))
+                    {
+                        symbolSet[desc.Ticker] = null;
+                        break;
+                    }
+                }
             }
 
             // now loop over each symbol and load the data
-            foreach (TickerSymbol symbol in set.Keys)
+            foreach (TickerSymbol symbol in symbolSet.Keys)
             {
                 LoadSymbol(symbol, begin, end);
             }
@@ -189,8 +198,15 @@ namespace Encog.ML.Data.Market
         private void LoadSymbol(TickerSymbol ticker, DateTime from,
                                 DateTime to)
         {
-            ICollection<LoadedMarketData> data = Loader.Load(ticker,
-                                                             null, from, to);
+            IList < MarketDataType > types = new List<MarketDataType>();
+            foreach (MarketDataDescription desc in Descriptions)
+            {
+                if (desc.Ticker.Equals(ticker))
+                {
+                    types.Add(desc.DataType);   
+                }
+            }
+            ICollection<LoadedMarketData> data = Loader.Load(ticker, types, from, to);         
             foreach (LoadedMarketData item in data)
             {
                 TemporalPoint point = CreatePoint(item.When);

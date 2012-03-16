@@ -1,8 +1,8 @@
 //
-// Encog(tm) Console Examples v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ using ConsoleExamples.Examples;
 using Encog.Examples;
 using Encog.Examples.Adaline;
 using Encog.Examples.Analyst;
+using Encog.Examples.Analyzer;
 using Encog.Examples.AnnealTSP;
 using Encog.Examples.ARTExample;
 using Encog.Examples.BAM;
@@ -39,11 +40,21 @@ using Encog.Examples.Hopfield.Associate;
 using Encog.Examples.Hopfield.Simple;
 using Encog.Examples.Image;
 using Encog.Examples.JordanNetwork;
+using Encog.Examples.Lunar;
 using Encog.Examples.Market;
+using Encog.Examples.MultiRadial;
+using Encog.Examples.NetWorkPruner;
+using Encog.Examples.Normalize;
 using Encog.Examples.Persist;
+using Encog.Examples.Predict;
+using Encog.Examples.RangeandMarket;
+using Encog.Examples.RateSP500;
+using Encog.Examples.SVM_Predict;
+using Encog.Examples.SVMPredictCSV;
 using Encog.Examples.XOR;
 using Encog.Examples.CSVMarketExample;
-
+using Encog.Examples.ForexExample;
+using Encog.Examples.Bayesian;
 namespace ConsoleExamples
 {
     /// <summary>
@@ -81,13 +92,25 @@ namespace ConsoleExamples
             examples.Add(SimpleBenchmark.Info);
             examples.Add(XORFactory.Info);
             examples.Add(XORHelloWorld.Info);
-            examples.Add(XORFlat.Info);
-            examples.Add(XORDisplay.Info);
             examples.Add(AnalystExample.Info);
             examples.Add(XORNEAT.Info);
             examples.Add(ForestCover.Info);
             examples.Add(Encog.Examples.Market.MarketPredict.Info);
             examples.Add(CSVMarketExample.Info);
+            examples.Add(ForexExample.Info);
+            examples.Add(LunarLander.Info);
+            examples.Add(MarketAnalyzer.Info);
+            examples.Add(PrunerLoader.Info);
+            examples.Add(MultiRadial.Info);
+            examples.Add(SVMExample.Info);
+            examples.Add(SVMPredictCSV.Info);
+            examples.Add(FahlmanEncoder.Info);
+            examples.Add(PredictSunspot.Info);
+            examples.Add(SimpleNormalize.Info);
+            examples.Add(NormalizeFile.Info);
+            examples.Add(ElliottBenchmark.Info);
+            examples.Add(XORPSO.Info);
+            examples.Add(BayesianTaxi.Info);
         }
 
         public void ListCommands()

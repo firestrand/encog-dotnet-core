@@ -1,8 +1,8 @@
 //
-// Encog(tm) Core v3.0 - .Net Version
+// Encog(tm) Core v3.1 - .Net Version
 // http://www.heatonresearch.com/encog/
 //
-// Copyright 2008-2011 Heaton Research, Inc.
+// Copyright 2008-2012 Heaton Research, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ namespace Encog.App.Analyst.CSV.Segregate
         {
             InputFilename = inputFile;
             ExpectInputHeaders = headers;
-            InputFormat = format;
+            Format = format;
 
             Analyzed = true;
 
@@ -99,7 +99,7 @@ namespace Encog.App.Analyst.CSV.Segregate
                 SegregateTargetPercent stp = p;
 
                 // assign a number of records to this
-                double percent = stp.Percent/Format.HundredPercent;
+                double percent = stp.Percent/100.0;
                 var c = (int) (RecordCount*percent);
                 stp.NumberRemaining = c;
 
@@ -135,7 +135,7 @@ namespace Encog.App.Analyst.CSV.Segregate
             Validate();
 
             var csv = new ReadCSV(InputFilename.ToString(),
-                                  ExpectInputHeaders, InputFormat);
+                                  ExpectInputHeaders, Format);
             ResetStatus();
 
             foreach (SegregateTargetPercent target  in  _targets)

@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Encog</RootNamespace>
     <AssemblyName>ConsoleExamples</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -36,6 +36,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -55,14 +58,19 @@
     <Compile Include="ConsoleExamples.cs" />
     <Compile Include="Examples\Adaline\AdalineDigits.cs" />
     <Compile Include="Examples\Analyst\AnalystExample.cs" />
+    <Compile Include="Examples\Bayesian\BayesianTaxi.cs" />
+    <Compile Include="Examples\Benchmark\ElliottBenchmark.cs" />
+    <Compile Include="Examples\Benchmark\FahlmanEncoder.cs" />
     <Compile Include="Examples\Benchmark\SimpleBenchmark.cs" />
     <Compile Include="Examples\Benchmark\ThreadCount.cs" />
     <Compile Include="Examples\Benchmark\WeightInitialization.cs" />
+    <Compile Include="Examples\Analyzer\CreateEval.cs" />
     <Compile Include="Examples\Forest\Evaluate.cs" />
     <Compile Include="Examples\Forest\ForestConfig.cs" />
     <Compile Include="Examples\Forest\ForestCover.cs" />
     <Compile Include="Examples\Forest\GenerateData.cs" />
     <Compile Include="Examples\Forest\TrainNetwork.cs" />
+    <Compile Include="Examples\ForexExample\markettrain.cs" />
     <Compile Include="Examples\GeneticTSP\GeneticSolveTSP.cs" />
     <Compile Include="Examples\GeneticTSP\ICalculateGenomeScore.cs" />
     <Compile Include="Examples\GeneticTSP\TSPGenome.cs" />
@@ -72,6 +80,11 @@
     <Compile Include="Examples\Image\ImageNeuralNetwork.cs" />
     <Compile Include="Examples\Image\ImagePair.cs" />
     <Compile Include="Examples\JordanNetwork\JordanExample.cs" />
+    <Compile Include="Examples\Lunar\LanderSimulator.cs" />
+    <Compile Include="Examples\Lunar\LunarLander.cs" />
+    <Compile Include="Examples\Lunar\NeuralPilot.cs" />
+    <Compile Include="Examples\Lunar\PilotScore.cs" />
+    <Compile Include="Examples\Analyzer\MarketAnalyzer.cs" />
     <Compile Include="Examples\Market\Config.cs" />
     <Compile Include="Examples\Market\MarketBuildTraining.cs" />
     <Compile Include="Examples\Market\MarketEvaluate.cs" />
@@ -79,15 +92,36 @@
     <Compile Include="Examples\Market\MarketPrune.cs" />
     <Compile Include="Examples\Market\MarketTrain.cs" />
     <Compile Include="Examples\Benchmark\MultiThreadBenchmark.cs" />
-    <Compile Include="Examples\MyTests\config.cs" />
-    <Compile Include="Examples\MyTests\marketbuildtraining.cs" />
-    <Compile Include="Examples\MyTests\marketevaluate.cs" />
-    <Compile Include="Examples\MyTests\marketpredict.cs" />
-    <Compile Include="Examples\MyTests\marketprune.cs" />
-    <Compile Include="Examples\MyTests\markettrain.cs" />
-    <Compile Include="Examples\MyTests\MyTests.cs" />
+    <Compile Include="Examples\CSVPredict\config.cs" />
+    <Compile Include="Examples\CSVPredict\marketbuildtraining.cs" />
+    <Compile Include="Examples\CSVPredict\marketevaluate.cs" />
+    <Compile Include="Examples\CSVPredict\marketpredict.cs" />
+    <Compile Include="Examples\CSVPredict\marketprune.cs" />
+    <Compile Include="Examples\CSVPredict\markettrain.cs" />
+    <Compile Include="Examples\CSVPredict\MyTests.cs" />
+    <Compile Include="Examples\MultiRadial\MultiRadial.cs" />
+    <Compile Include="Examples\NetWorkPruner\PrunerLoader.cs" />
+    <Compile Include="Examples\Normalize\NormalizeFile.cs" />
+    <Compile Include="Examples\Normalize\SimpleNormalize.cs" />
     <Compile Include="Examples\Persist\PersistEncog.cs" />
     <Compile Include="Examples\Persist\PersistSerial.cs" />
+    <Compile Include="Examples\Analyzer\Prunes.cs" />
+    <Compile Include="Examples\Analyzer\RandomTrainer.cs" />
+    <Compile Include="Examples\Predict\PredictSunspot.cs" />
+    <Compile Include="Examples\RateSP500\FinancialSample.cs" />
+    <Compile Include="Examples\RateSP500\InterestRate.cs" />
+    <Compile Include="Examples\RateSP500\PredictSP500.cs" />
+    <Compile Include="Examples\RateSP500\SP500Actual.cs" />
+    <Compile Include="Examples\SVM Predict\CreateSVMNetWork.cs" />
+    <Compile Include="Examples\SVM Predict\SVMExample.cs" />
+    <Compile Include="Examples\SVM Predict\SVMPredictSunSpots.cs" />
+    <Compile Include="Examples\SVMPredict CSV\config.cs" />
+    <Compile Include="Examples\SVMPredict CSV\marketbuildtraining.cs" />
+    <Compile Include="Examples\SVMPredict CSV\marketevaluate.cs" />
+    <Compile Include="Examples\SVMPredict CSV\marketpredict.cs" />
+    <Compile Include="Examples\SVMPredict CSV\marketprune.cs" />
+    <Compile Include="Examples\SVMPredict CSV\markettrain.cs" />
+    <Compile Include="Examples\SVMPredict CSV\mytests.cs" />
     <Compile Include="Examples\Util\City.cs" />
     <Compile Include="Examples\AnnealTSP\SolveTSP.cs" />
     <Compile Include="Examples\AnnealTSP\TSPSimulatedAnnealing.cs" />
@@ -103,12 +137,16 @@
     <Compile Include="Examples\IExample.cs" />
     <Compile Include="Examples\IExampleInterface.cs" />
     <Compile Include="Examples\Util\TemporalXOR.cs" />
-    <Compile Include="Examples\XOR\XORDisplay.cs" />
     <Compile Include="Examples\XOR\XORFactory.cs" />
-    <Compile Include="Examples\XOR\XORFlat.cs" />
     <Compile Include="Examples\XOR\XORHelloWorld.cs" />
     <Compile Include="Examples\XOR\XORNEAT.cs" />
+    <Compile Include="Examples\XOR\XORPSO.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\encog-core-cs\encog-core-cs.csproj">
@@ -118,7 +156,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="DB!EURUSD.Bar.Time.600.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
